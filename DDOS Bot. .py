@@ -244,9 +244,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await db.commit()
 
     caption = (
-        "🔥 **Welcome to DDoS ULTRA PRO** 🔥\n\n"
-        "Here you can send any website link and crush it with heavy traffic "
-        "using our 10M+ real IP database.\n\n"
+        "🔥 **Welcome to Stark bot** 🔥\n\n"
+        "Here you can build and system "
+        "usin\n\n"
         "👇 **Select an option below to begin:**"
     )
     
