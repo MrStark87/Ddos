@@ -39,13 +39,13 @@ from datetime import datetime
 from urllib.parse import urlparse
 
 # ---------------- CONFIG ----------------
-BOT_TOKEN = (os.getenv("BOT_TOKEN") or "8861689167:AAEXWCCcgFDX6vtAqGP5b01Q1ChLg6XpBFI").strip()
-ADMIN_ID = 8472327599
+BOT_TOKEN = (os.getenv("BOT_TOKEN") or "").strip()
+ADMIN_ID = 5864182070
 DB_PATH = "database.db"
 IMG_PATH = "welcome.jpg"
 
-OWNER_USERNAME = "@Rolax112"
-CHANNEL_LINK = "https://t.me/rolaxexploitsz"
+OWNER_USERNAME = "@coderxstark"
+CHANNEL_LINK = "https://t.me/ur_starkz"
 
 # ---------------- 10M+ IP DATABASE ----------------
 PROVIDER_BLOCKS = [
